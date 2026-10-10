@@ -15,7 +15,7 @@ import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-age
 import { CHILD_COMMAND_TOOL, createChildCommandRuntime } from "./child-commands.ts";
 import { supervisorChannelDir } from "./child-tool-plan.ts";
 import { pinChildCacheRetention } from "../../shared/child-cache-retention.ts";
-import { getAgentDir, PI_CODING_AGENT_PACKAGE_ROOT_ENV } from "../../shared/utils.ts";
+import { getChildAgentDir, PI_CODING_AGENT_PACKAGE_ROOT_ENV } from "../../shared/utils.ts";
 import { resolvePackageSubpath } from "../background/runner-aliases.ts";
 import { PI_CODING_AGENT_PACKAGE, resolveInstalledPiPackageRoot, resolvePiPackageRoot } from "./pi-spawn.ts";
 import type { ChildRuntimeConfig } from "./child-runtime-config.ts";
@@ -429,7 +429,7 @@ export function createDefaultChildSessionFactory(options: DefaultChildSessionFac
 			const modelRuntime = launch.parentProviderRegistry
 				? await pi.ModelRuntime.create()
 				: await sharedRuntime(pi);
-			const agentDir = getAgentDir();
+			const agentDir = getChildAgentDir();
 			const commands = launch.runtime.runId && launch.runtime.agent && launch.runtime.childIndex !== undefined
 				&& launch.tools?.includes("bash") && launch.tools.includes(CHILD_COMMAND_TOOL)
 				&& !launch.excludeTools?.includes("bash") && !launch.excludeTools?.includes(CHILD_COMMAND_TOOL)

@@ -95,6 +95,19 @@ export function getAgentDir(): string {
 	return configured || path.join(home, getConfigDirName(), "agent");
 }
 
+/** Env override for the agent dir a child session loads settings and ambient packages from. */
+export const SUBAGENT_CHILD_AGENT_DIR_ENV = "PI_SUBAGENT_CHILD_AGENT_DIR";
+
+/** Agent dir for child sessions: `PI_SUBAGENT_CHILD_AGENT_DIR` when set, else the parent's agent dir. */
+export function getChildAgentDir(): string {
+	const configured = process.env[SUBAGENT_CHILD_AGENT_DIR_ENV]?.trim();
+	if (!configured) return getAgentDir();
+	const home = process.env.HOME || process.env.USERPROFILE || os.homedir();
+	if (configured === "~") return home;
+	if (configured.startsWith("~/") || configured.startsWith("~\\")) return path.join(home, configured.slice(2));
+	return path.resolve(configured);
+}
+
 const statusCache = new Map<string, { mtime: number; ctime: number; size: number; ino: number; status: AsyncStatus }>();
 const MAX_STATUS_CACHE_ENTRIES = 512;
 
