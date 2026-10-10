@@ -477,6 +477,14 @@ Overrides the `pi` command pi-subagents spawns for project panes and the profile
 
 Foreground children remain sessions inside the parent. Npm background children retain their Node runner and host-package peer aliases; this variable does not turn npm Pi into a binary-backed runner. See [Standalone background execution](standalone-background.md) for the official tested target.
 
+## `PI_SUBAGENT_CHILD_AGENT_DIR`
+
+```bash
+export PI_SUBAGENT_CHILD_AGENT_DIR=~/.pi/agents/sub
+```
+
+Points child sessions (foreground and background) at a different Pi agent directory. The child reads `settings.json` (compaction, packages, theme, ...) and loads ambient packages from that directory instead of the parent's `PI_CODING_AGENT_DIR`. Run bookkeeping (async run state, missions, intercom) stays with the parent's agent directory. Unset or whitespace-only values keep the parent's directory. The directory must provide the auth, models and package store the child needs (for example as symlinks into the parent's directory).
+
 ## `PI_PACKAGE_DIR`
 
 ```bash
