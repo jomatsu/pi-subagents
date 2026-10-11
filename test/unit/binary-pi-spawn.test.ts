@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { resolveBunPiExecutable } from "../../src/runs/shared/pi-spawn.ts";
+import { getPiSpawnCommand, resolveBunPiExecutable } from "../../src/runs/shared/pi-spawn.ts";
 
 for (const [argv1, execPath] of [
 	["/$bunfs/root/pi-native", "/opt/standalone/pi-native"],
@@ -23,5 +23,24 @@ for (const [argv1, execPath] of [
 			assert.equal(resolveBunPiExecutable({ ...host, argv1: entry }), undefined, entry);
 		}
 		assert.equal(resolveBunPiExecutable({ ...host, bunVersion: "" }), undefined);
+	});
+});
+
+describe("Pi-Bolt macOS launcher", () => {
+	const host = { execPath: "/opt/pi-bolt/pi-bin", argv1: "/$bunfs/root/pi", bunVersion: "1.4.2", env: {} };
+
+	it("restarts through the sibling pi launcher instead of the pi-bin image", () => {
+		const existsSync = (filePath: string) => filePath === "/opt/pi-bolt/pi";
+		assert.equal(resolveBunPiExecutable({ ...host, existsSync }), "/opt/pi-bolt/pi");
+	});
+
+	it("keeps pi-bin when no launcher sits beside it", () => {
+		assert.equal(resolveBunPiExecutable({ ...host, existsSync: () => false }), "/opt/pi-bolt/pi-bin");
+	});
+
+	it("spawns the compiled host directly, never passing a CLI script to it", () => {
+		const existsSync = (filePath: string) => filePath === "/opt/pi-bolt/pi" || filePath.endsWith("/dist/cli.js");
+		const args = ["-p", "Reply OK"];
+		assert.deepEqual(getPiSpawnCommand(args, { ...host, platform: "darwin", existsSync }), { command: "/opt/pi-bolt/pi", args });
 	});
 });

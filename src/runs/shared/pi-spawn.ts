@@ -57,13 +57,24 @@ export interface PiSpawnDeps {
 	env?: NodeJS.ProcessEnv;
 }
 
+/**
+ * Pi-Bolt's macOS build runs its compiled image as `pi-bin` beside a `pi` launcher.
+ * Children go through the launcher so they keep its spawn helper and page preload.
+ */
+function preferCompiledPiLauncher(execPath: string, existsSync: (filePath: string) => boolean): string {
+	if (path.basename(execPath) !== "pi-bin") return execPath;
+	const launcher = path.join(path.dirname(execPath), "pi");
+	return existsSync(launcher) ? launcher : execPath;
+}
+
 /** Compiled Pi's entrypoint is virtual; execPath is the real (possibly renamed) image. */
 export function resolveBunPiExecutable(deps: PiSpawnDeps = {}): string | undefined {
 	const bunVersion = deps.bunVersion ?? process.versions.bun;
 	const entry = deps.argv1 ?? process.argv[1];
 	if (!bunVersion || !entry || !/^(?:\/\$bunfs\/|B:[\\/]~BUN[\\/])/.test(entry)) return undefined;
 	const env = deps.env ?? process.env;
-	return env[PI_SUBAGENT_PI_BINARY_ENV]?.trim() || (deps.execPath ?? process.execPath);
+	return env[PI_SUBAGENT_PI_BINARY_ENV]?.trim()
+		|| preferCompiledPiLauncher(deps.execPath ?? process.execPath, deps.existsSync ?? fs.existsSync);
 }
 
 interface PiSpawnCommand {
@@ -182,6 +193,9 @@ export function getPiSpawnCommand(
 		}
 		return { command: piBinary, args };
 	}
+
+	const compiledHost = resolveBunPiExecutable(deps);
+	if (compiledHost) return { command: compiledHost, args };
 
 	const execPath = deps.execPath ?? process.execPath;
 	if (isStandalonePiExecutable(execPath)) {
